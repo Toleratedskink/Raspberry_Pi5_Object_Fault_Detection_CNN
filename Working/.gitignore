@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# YOLOv8
+runs/
+weights/
+*.pt
+*.onnx
+*.engine
+
+# Data (keep structure, ignore large files if needed)
+# data/images/
+# data/labels/
+
+# Temporary files
+temp_downloads/
+source_images/
+kaggle_download/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/

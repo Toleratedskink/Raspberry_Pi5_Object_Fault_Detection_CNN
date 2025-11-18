@@ -1,0 +1,13 @@
+names:
+- good_weld
+- porosity
+- crack
+- undercut
+- lack_of_fusion
+- slag_inclusion
+- spatter
+nc: 7
+path: /Users/jeremyburke/Raspberry_Pi5_Object_Fault_Detection_CNN/Working/data
+test: images/test
+train: images/train
+val: images/val
