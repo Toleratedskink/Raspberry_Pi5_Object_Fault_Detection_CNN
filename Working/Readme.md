@@ -87,19 +87,29 @@ deactivate
 
 ### Training a Model
 
-Train a YOLOv8 model on the welding defect dataset:
+Train a YOLOv8 model using the pictures in `data/` (train/val images and labels):
 
 ```bash
-python3 main.py --mode train
+python3 train.py
+```
+
+Or with options:
+
+```bash
+python3 train.py --epochs 100 --batch 16 --name my_run
+python3 train.py --device 0
 ```
 
 **What this does:**
-- Loads the dataset configuration from `data/weld_dataset.yaml`
-- Starts from a pretrained YOLOv8n (nano) model
-- Trains for 50 epochs with early stopping
-- Saves the best model weights to `runs/weld_detection/weights/best.pt`
+- Uses the dataset defined in `data/weld_dataset.yaml` (images in `data/images/train`, `data/images/val`)
+- Starts from a pretrained YOLOv8n (nano) model and fine-tunes on your weld images
+- Saves the best weights to `runs/weld_detection/weights/best.pt` (or `runs/<name>/weights/best.pt` if you use `--name`)
 
-**Note:** Make sure you've run `setup_kaggle_dataset.py` first to prepare the dataset!
+**Optional arguments:** `--data`, `--base`, `--epochs`, `--imgsz`, `--batch`, `--name`, `--project`, `--patience`, `--device`. Run `python3 train.py --help` for details.
+
+**Note:** Prepare the dataset first with `python3 setup_kaggle_dataset.py` if you haven’t already. You can also train via `python3 main.py --mode train` (same behavior).
+
+**Training with the large dataset:** The folder **The Welding Defect Dataset** (project root) has many more images. Use it with: `python3 train.py --data weld_big_dataset.yaml --name weld_big` (3 classes: Bad Weld, Good Weld, Defect). For good/bad-only: run `python3 prepare_2class_big_dataset.py`, then `python3 train.py --data data_2class_big/weld_2class_big.yaml --name weld_good_bad`.
 
 ### Validating a Model
 
@@ -148,6 +158,48 @@ Detections in image.jpg:
   - porosity: 72.1%
 ```
 
+### Real-time detection (webcam or video)
+
+Run weld-defect detection on a live camera feed or a video file:
+
+```bash
+# Default webcam (camera index 0)
+python3 realtime_detect.py
+
+# Custom model and confidence
+python3 realtime_detect.py --model runs/weld_detection4/weights/best.pt --conf 0.3
+
+# Use a video file instead of webcam
+python3 realtime_detect.py --source path/to/video.mp4
+
+# Save annotated video to a file
+python3 realtime_detect.py --save output.mp4
+```
+
+**Parameters:**
+- `--source`: Camera index (e.g., `0` for default webcam) or path to a video file. Default: `0`
+- `--model`: Path to trained YOLO weights (`.pt`). Default: `runs/weld_detection4/weights/best.pt`
+- `--conf`: Confidence threshold (0–1). Default: `0.25`
+- `--save`: If set, save the annotated video to this path (e.g., `output.mp4`)
+
+**What this does:**
+- Opens your webcam or the given video file
+- Runs the trained model on each frame and draws bounding boxes and labels
+- Shows FPS in the window
+- Press **q** in the window to quit
+
+### Real-time Good / Bad only (2-class model)
+
+Uses a model trained on **only two classes**: good_weld and bad_weld (no defect types). Setup once, then run realtime:
+
+**One-time setup:** Run `python3 prepare_2class_dataset.py`, then train the 2-class model:
+`python3 train.py --data data_2class/weld_dataset_2class.yaml --name weld_good_bad`
+
+**Run realtime:** `python3 realtime_good_bad.py` or `python3 realtime_good_bad.py --conf 0.2 --save output.mp4`
+
+- **GOOD WELD** (green) / **BAD WELD** (red). Boxes show confidence only.
+Press **q** to quit.
+
 ---
 
 ## Quick Reference
@@ -156,9 +208,11 @@ Detections in image.jpg:
 |------|---------|
 | Activate environment | `source venv/bin/activate` |
 | Install packages | `pip install -r requirements.txt` |
-| Train model | `python3 main.py --mode train` |
+| Train model | `python3 train.py` or `python3 main.py --mode train` |
 | Validate model | `python3 main.py --mode validate` |
 | Predict on image | `python3 main.py --mode predict --image <path> --model <path> --conf 0.25` |
+| **Real-time (full)** | `python3 realtime_detect.py` or `python3 realtime_detect.py --source video.mp4` |
+| **Real-time (good/bad only)** | `python3 realtime_good_bad.py` |
 | Get help | `python3 main.py --help` |
 
 ---
@@ -188,6 +242,10 @@ Detections in image.jpg:
 ```
 Working/
 ├── main.py                 # Main training/validation/prediction script
+├── train.py                # Dedicated training script (uses data/ pictures)
+├── realtime_detect.py      # Real-time weld defect detection (webcam/video, full labels)
+├── realtime_good_bad.py    # Real-time good/bad only (2-class model: good_weld / bad_weld)
+├── prepare_2class_dataset.py  # Converts 7-class labels to 2-class for good/bad training
 ├── setup_kaggle_dataset.py # Dataset preparation script
 ├── requirements.txt        # Python package dependencies
 ├── activate.sh            # Convenience script to activate venv

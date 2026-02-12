@@ -1,0 +1,14 @@
+# Training config for "The Welding Defect Dataset" (project root folder)
+# ~839 train images, ~176 valid, ~74 test. 3 classes: Bad Weld, Good Weld, Defect.
+# Run from Working/: python3 train.py --data weld_big_dataset.yaml --name weld_big
+# Path is relative to current working directory (run from Working/).
+
+path: ../The Welding Defect Dataset
+train: train/images
+val: valid/images
+test: test/images
+nc: 3
+names:
+  - Bad Weld
+  - Good Weld
+  - Defect

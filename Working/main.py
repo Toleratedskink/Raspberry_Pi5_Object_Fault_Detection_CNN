@@ -1,8 +1,9 @@
 """
 YOLOv8 Welding Fault Detection - Simplified Training / Validation / Inference Script
 
-Author intent (student notes):
-- This file is meant to be a *single entry point* for my welding-defect detection project.
+Main.py code:
+- This file is Jeremy Burke's senior design project for Western New England university.
+- It is designed to be a CNN model that can detect welding defects in images.
 - It wraps Ultralytics YOLOv8's Python API so I can reproducibly:
   1) train a model on my dataset,
   2) validate the trained model, and
@@ -11,7 +12,7 @@ Author intent (student notes):
 Project assumptions:
 - A YOLO-format dataset has been prepared already (images + labels).
 - A dataset config file exists at: `data/weld_dataset.yaml`
-  This YAML tells YOLO where the train/val images live and what the class names are.
+-This YAML tells YOLO where the train/val images live and what the class names are.
 - Training outputs are written under `runs/` (Ultralytics default convention).
 
 How to run (examples):
@@ -22,9 +23,6 @@ How to run (examples):
 - Predict:
     python main.py --mode predict --image path/to/image.jpg --conf 0.25
 
-Notes:
-- This script is intentionally "simple and explicit" (not optimized) so a professor can
-  understand the pipeline quickly.
 """
 
 from ultralytics import YOLO
@@ -50,6 +48,7 @@ def train():
     
     # Load a YOLOv8 model. 'yolov8n.pt' is the "nano" model (smallest/fastest).
     # Using a smaller model is helpful for faster iteration and for limited hardware.
+    # This will help in the future when the trained model is deployed to a Raspberry Pi.
     model = YOLO('yolov8n.pt')
     
     # Train configuration:
