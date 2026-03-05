@@ -62,9 +62,7 @@ def run(source="/dev/video0", model_path="runs/weld_good_bad2/weights/best.pt", 
         fps = cap.get(cv2.CAP_PROP_FPS) or 25.0
         writer = cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*"mp4v"), fps, (w, h))
 
-    # Release camera so only model.predict() opens it (avoids "video0 doesn't exist" on Pi)
-    cap.release()
-
+    # Use our camera only — read frames and pass to model (keeps camera open on Pi)
     win = "Good / Bad Weld (q to quit)"
     cv2.namedWindow(win, cv2.WINDOW_NORMAL)
     if is_camera:
@@ -73,19 +71,24 @@ def run(source="/dev/video0", model_path="runs/weld_good_bad2/weights/best.pt", 
     fps_smooth = 0.0
     t_prev = time.perf_counter()
     try:
-        for result in model.predict(
-            source=source,
-            stream=True,
-            conf=conf,
-            verbose=False,
-            device="cpu",
-        ):
-            frame = result.orig_img.copy()
+        while True:
+            ret, frame = cap.read()
+            if not ret or frame is None:
+                break
             h, w = frame.shape[:2]
             font = cv2.FONT_HERSHEY_SIMPLEX
             thickness = 4
 
-            # Only call it BAD if we have a bad_weld detection above bad_min_conf (reduces false "everything bad")
+            # Run model on this frame (no second camera open)
+            results = model.predict(frame, conf=conf, verbose=False, device="cpu")
+            result = results[0] if results else None
+            if result is None:
+                cv2.imshow(win, frame)
+                if cv2.waitKey(1) & 0xFF == ord("q"):
+                    break
+                continue
+
+            # Only call it BAD if we have a bad_weld detection above bad_min_conf
             is_bad = False
             max_conf = 0.0
             if result.boxes is not None and len(result.boxes) > 0:
@@ -99,7 +102,6 @@ def run(source="/dev/video0", model_path="runs/weld_good_bad2/weights/best.pt", 
                     pt1, pt2 = (int(x1), int(y1)), (int(x2), int(y2))
                     color = (0, 0, 255) if cls_id != GOOD_CLASS_ID else (0, 255, 0)
                     cv2.rectangle(frame, pt1, pt2, color, thickness)
-                    # Confidence only (no class name)
                     txt = f"{c:.0%}"
                     (cw, ch), _ = cv2.getTextSize(txt, font, 0.6, 2)
                     cv2.rectangle(frame, (pt1[0], pt1[1] - ch - 6), (pt1[0] + cw + 4, pt1[1]), color, -1)
