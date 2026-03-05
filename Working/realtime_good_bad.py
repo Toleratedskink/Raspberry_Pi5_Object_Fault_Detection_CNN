@@ -11,8 +11,8 @@ Setup (one-time):
 
 Usage:
   python3 realtime_good_bad.py
-  python3 realtime_good_bad.py --conf 0.2
-  # Raspberry Pi 5: default source is /dev/video0. Override: --source 0 or --source /dev/video1
+  python3 realtime_good_bad.py --conf 0.2 --imgsz 320
+  # Raspberry Pi 5: default source /dev/video0. For Hailo-8, see HAILO.md and run_realtime_hailo.py.
 Press 'q' to quit.
 """
 
@@ -32,7 +32,7 @@ def _macos_camera_tip():
     print("  → Turn ON for Terminal (or Cursor)")
 
 
-def run(source="/dev/video0", model_path="runs/weld_good_bad2/weights/best.pt", conf=0.25, bad_min_conf=0.5, save_path=None):
+def run(source="/dev/video0", model_path="runs/weld_good_bad2/weights/best.pt", conf=0.25, bad_min_conf=0.5, save_path=None, imgsz=320, skip_frames=0):
     if not Path(model_path).exists():
         print(f"Model not found: {model_path}")
         print("  Train first, e.g.: python3 train.py --data data_2class_big/weld_2class_big.yaml --name weld_good_bad2")
@@ -70,6 +70,7 @@ def run(source="/dev/video0", model_path="runs/weld_good_bad2/weights/best.pt", 
 
     fps_smooth = 0.0
     t_prev = time.perf_counter()
+    frame_count = 0
     try:
         while True:
             ret, frame = cap.read()
@@ -78,9 +79,16 @@ def run(source="/dev/video0", model_path="runs/weld_good_bad2/weights/best.pt", 
             h, w = frame.shape[:2]
             font = cv2.FONT_HERSHEY_SIMPLEX
             thickness = 4
+            frame_count += 1
+            # Skip frames to reduce load (e.g. run inference every 2nd frame)
+            if skip_frames > 0 and frame_count % (skip_frames + 1) != 0:
+                cv2.imshow(win, frame)
+                if cv2.waitKey(1) & 0xFF == ord("q"):
+                    break
+                continue
 
-            # Run model on this frame (no second camera open)
-            results = model.predict(frame, conf=conf, verbose=False, device="cpu")
+            # Run model (smaller imgsz = faster on CPU; use --imgsz 640 for accuracy)
+            results = model.predict(frame, conf=conf, verbose=False, device="cpu", imgsz=imgsz)
             result = results[0] if results else None
             if result is None:
                 cv2.imshow(win, frame)
@@ -147,6 +155,8 @@ if __name__ == "__main__":
     ap.add_argument("--model", default="runs/weld_good_bad2/weights/best.pt", help="Path to 2-class .pt model")
     ap.add_argument("--conf", type=float, default=0.25, help="Detection confidence threshold")
     ap.add_argument("--bad-min-conf", type=float, default=0.5, help="Min confidence to show BAD WELD (higher = fewer false bads)")
+    ap.add_argument("--imgsz", type=int, default=320, help="Inference size (320=faster, 640=more accurate). Use 320 on Pi CPU.")
+    ap.add_argument("--skip-frames", type=int, default=0, help="Run inference every N+1 frames (0=every frame, 1=every 2nd, 2=every 3rd)")
     ap.add_argument("--save", default=None, help="Save output video path")
     args = ap.parse_args()
     # Allow numeric camera index (e.g. 0) or device path (/dev/video0)
@@ -154,4 +164,4 @@ if __name__ == "__main__":
         source = int(args.source)
     except ValueError:
         source = args.source
-    run(source=source, model_path=args.model, conf=args.conf, bad_min_conf=args.bad_min_conf, save_path=args.save)
+    run(source=source, model_path=args.model, conf=args.conf, bad_min_conf=args.bad_min_conf, save_path=args.save, imgsz=args.imgsz, skip_frames=args.skip_frames)

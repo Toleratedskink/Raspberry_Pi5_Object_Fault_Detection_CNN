@@ -195,9 +195,9 @@ Uses a model trained on **only two classes**: good_weld and bad_weld (no defect 
 **One-time setup:** Run `python3 prepare_2class_dataset.py`, then train the 2-class model:
 `python3 train.py --data data_2class/weld_dataset_2class.yaml --name weld_good_bad`
 
-**Run realtime:** `python3 realtime_good_bad.py` or `python3 realtime_good_bad.py --conf 0.2 --save output.mp4`
+**Run realtime:** `python3 realtime_good_bad.py` or `python3 realtime_good_bad.py --conf 0.2 --imgsz 320 --save output.mp4`
 
-- **GOOD WELD** (green) / **BAD WELD** (red). Boxes show confidence only.
+- **GOOD WELD** (green) / **BAD WELD** (red). Boxes show confidence only. On Raspberry Pi use `--imgsz 320` (and optionally `--skip-frames 1`) for less lag. For **Hailo-8 AI HAT**, see **HAILO.md** and use `run_realtime_hailo.py` with a compiled .hef model.
 Press **q** to quit.
 
 ---
