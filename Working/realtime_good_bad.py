@@ -62,6 +62,9 @@ def run(source="/dev/video0", model_path="runs/weld_good_bad2/weights/best.pt", 
         fps = cap.get(cv2.CAP_PROP_FPS) or 25.0
         writer = cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*"mp4v"), fps, (w, h))
 
+    # Release camera so only model.predict() opens it (avoids "video0 doesn't exist" on Pi)
+    cap.release()
+
     win = "Good / Bad Weld (q to quit)"
     cv2.namedWindow(win, cv2.WINDOW_NORMAL)
     if is_camera:
