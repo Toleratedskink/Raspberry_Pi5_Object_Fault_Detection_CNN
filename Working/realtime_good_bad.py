@@ -11,7 +11,8 @@ Setup (one-time):
 
 Usage:
   python3 realtime_good_bad.py
-  python3 realtime_good_bad.py --conf 0.2 --source 0
+  python3 realtime_good_bad.py --conf 0.2
+  # Raspberry Pi 5: default source is /dev/video0. Override: --source 0 or --source /dev/video1
 Press 'q' to quit.
 """
 
@@ -31,7 +32,7 @@ def _macos_camera_tip():
     print("  → Turn ON for Terminal (or Cursor)")
 
 
-def run(source=0, model_path="runs/weld_good_bad2/weights/best.pt", conf=0.25, bad_min_conf=0.5, save_path=None):
+def run(source="/dev/video0", model_path="runs/weld_good_bad2/weights/best.pt", conf=0.25, bad_min_conf=0.5, save_path=None):
     if not Path(model_path).exists():
         print(f"Model not found: {model_path}")
         print("  Train first, e.g.: python3 train.py --data data_2class_big/weld_2class_big.yaml --name weld_good_bad2")
@@ -44,10 +45,12 @@ def run(source=0, model_path="runs/weld_good_bad2/weights/best.pt", conf=0.25, b
         _macos_camera_tip()
         return
 
-    if source == 0 or source == "0":
+    # Camera source: /dev/video0 (Raspberry Pi) or 0 (e.g. macOS webcam)
+    is_camera = source in (0, "0", "/dev/video0", "/dev/video1")
+    if is_camera:
         ret, test = cap.read()
         if not ret or test is None or test.size == 0 or test.max() == 0:
-            print("Could not read from camera. Grant camera access:")
+            print("Could not read from camera. On macOS grant camera access; on Pi check /dev/video0.")
             _macos_camera_tip()
             cap.release()
             return
@@ -61,7 +64,8 @@ def run(source=0, model_path="runs/weld_good_bad2/weights/best.pt", conf=0.25, b
 
     win = "Good / Bad Weld (q to quit)"
     cv2.namedWindow(win, cv2.WINDOW_NORMAL)
-    print("Point camera at a weld. Green = GOOD WELD, Red = BAD WELD. Press 'q' to quit.")
+    if is_camera:
+        print("Point camera at a weld. Green = GOOD WELD, Red = BAD WELD. Press 'q' to quit.")
 
     fps_smooth = 0.0
     t_prev = time.perf_counter()
@@ -134,12 +138,13 @@ def run(source=0, model_path="runs/weld_good_bad2/weights/best.pt", conf=0.25, b
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description="Real-time Good/Bad weld only (2-class model).")
-    ap.add_argument("--source", default=0, help="Camera index or video path")
+    ap.add_argument("--source", default="/dev/video0", help="Camera device (default /dev/video0 for Raspberry Pi) or video path")
     ap.add_argument("--model", default="runs/weld_good_bad2/weights/best.pt", help="Path to 2-class .pt model")
     ap.add_argument("--conf", type=float, default=0.25, help="Detection confidence threshold")
     ap.add_argument("--bad-min-conf", type=float, default=0.5, help="Min confidence to show BAD WELD (higher = fewer false bads)")
     ap.add_argument("--save", default=None, help="Save output video path")
     args = ap.parse_args()
+    # Allow numeric camera index (e.g. 0) or device path (/dev/video0)
     try:
         source = int(args.source)
     except ValueError:
