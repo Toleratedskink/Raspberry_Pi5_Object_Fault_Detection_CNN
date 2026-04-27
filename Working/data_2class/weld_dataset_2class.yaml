@@ -1,7 +1,7 @@
-# 2-class weld dataset: good_weld (0) and bad_weld (1) only
+# 2-class weld dataset: bad_weld (0) and good_weld (1)
 names:
-  - good_weld
   - bad_weld
+  - good_weld
 nc: 2
 path: /Users/jeremyburke/Raspberry_Pi5_Object_Fault_Detection_CNN/Working/data_2class
 train: images/train

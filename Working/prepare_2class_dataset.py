@@ -1,7 +1,7 @@
 """
-Convert the 7-class weld dataset to 2 classes only: good_weld (0) and bad_weld (1).
-- Class 0 (good_weld) stays 0.
-- Classes 1–6 (porosity, crack, undercut, lack_of_fusion, slag_inclusion, spatter) become 1 (bad_weld).
+Convert the 7-class weld dataset to 2 classes only: bad_weld (0) and good_weld (1).
+- Class 0 (good_weld in 7-class) becomes 1 (good_weld).
+- Classes 1–6 (defects) become 0 (bad_weld).
 
 Creates data_2class/ with symlinked images and new label files. Run once before
 training the good/bad-only model:
@@ -19,13 +19,13 @@ SPLITS = ("train", "val", "test")
 
 
 def convert_label_line(line: str) -> str:
-    """Convert one YOLO line: class 0 stays 0, classes 1-6 become 1."""
+    """Convert one YOLO line: class 0 (good) -> 1; classes 1-6 -> 0 (bad)."""
     parts = line.strip().split()
     if not parts:
         return ""
     try:
         cls = int(parts[0])
-        new_cls = 0 if cls == 0 else 1
+        new_cls = 1 if cls == 0 else 0
         return f"{new_cls} " + " ".join(parts[1:]) + "\n"
     except (ValueError, IndexError):
         return ""
@@ -71,10 +71,10 @@ def main():
     # Write 2-class YAML (path relative to Working dir)
     yaml_path = DATA_2CLASS / "weld_dataset_2class.yaml"
     abs_path = yaml_path.resolve()
-    content = f"""# 2-class weld dataset: good_weld (0) and bad_weld (1) only
+    content = f"""# 2-class weld dataset: bad_weld (0) and good_weld (1)
 names:
-  - good_weld
   - bad_weld
+  - good_weld
 nc: 2
 path: {abs_path.parent}
 train: images/train

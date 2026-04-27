@@ -67,7 +67,7 @@ python python/pipeline_apps/detection/detection.py \
   --input /dev/video0
 ```
 
-Labels in `weld_labels.json` are `good_weld` and `bad_weld` (class 0 and 1). The pipeline will show detections with those names; treat good_weld as GOOD and bad_weld as BAD.
+Labels in `weld_labels.json` are `bad_weld` (class 0) and `good_weld` (class 1). Treat good_weld as GOOD and bad_weld as BAD.
 
 ## 5. CPU-only fallback (no Hailo)
 

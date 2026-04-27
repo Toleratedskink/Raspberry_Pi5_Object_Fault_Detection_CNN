@@ -1,9 +1,9 @@
 """
-Build a 2-class (good_weld / bad_weld) version of "The Welding Defect Dataset"
+Build a 2-class (bad_weld / good_weld) version of "The Welding Defect Dataset"
 so you can train the good/bad-only model on the large set.
 
 Original classes: 0=Bad Weld, 1=Good Weld, 2=Defect
-Converted: good_weld=0 (was 1), bad_weld=1 (was 0 or 2)
+Converted: bad_weld=0 (was 0 or 2), good_weld=1 (was 1)
 
 Creates: data_2class_big/ with symlinked images and converted labels.
 Run once, then: python3 train.py --data data_2class_big/weld_2class_big.yaml --name weld_good_bad
@@ -22,8 +22,8 @@ def convert_line(line: str) -> str:
         return ""
     try:
         cls = int(parts[0])
-        # 0=Bad, 1=Good, 2=Defect -> good_weld=0, bad_weld=1
-        new_cls = 0 if cls == 1 else 1
+        # 0=Bad, 1=Good, 2=Defect -> bad_weld=0, good_weld=1
+        new_cls = 1 if cls == 1 else 0
         return f"{new_cls} " + " ".join(parts[1:]) + "\n"
     except (ValueError, IndexError):
         return ""
@@ -59,10 +59,10 @@ def main():
         print("Converted labels:", split, "->", dst_lbl)
 
     yaml = DEST / "weld_2class_big.yaml"
-    yaml.write_text(f"""# 2-class from The Welding Defect Dataset: good_weld (0), bad_weld (1)
+    yaml.write_text(f"""# 2-class: bad_weld (0), good_weld (1)
 names:
-  - good_weld
   - bad_weld
+  - good_weld
 nc: 2
 path: {DEST.resolve()}
 train: images/train

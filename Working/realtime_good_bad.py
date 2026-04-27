@@ -1,7 +1,7 @@
 """
 Real-time Good Weld / Bad Weld only.
 
-Uses a model trained with exactly two classes: good_weld (0) and bad_weld (1).
+Uses a model trained with exactly two classes: bad_weld (0) and good_weld (1).
 No defect types (no crack, porosity, spatter, etc.) — only GOOD WELD or BAD WELD.
 
 Setup (one-time):
@@ -23,8 +23,8 @@ from pathlib import Path
 import cv2
 from ultralytics import YOLO
 
-# 2-class model: 0 = good_weld, 1 = bad_weld
-GOOD_CLASS_ID = 0
+# 2-class model: 0 = bad_weld, 1 = good_weld
+GOOD_CLASS_ID = 1
 
 
 def _macos_camera_tip():

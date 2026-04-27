@@ -11,7 +11,7 @@ Usage:
   python3 run_realtime_hailo.py --hef path/to/weld_2class.hef --input /dev/video0
 
 If hailo-apps is installed, this runs the Hailo detection pipeline with your HEF
-and weld_labels.json (good_weld, bad_weld). Otherwise it prints setup instructions.
+and weld_labels.json (bad_weld=0, good_weld=1). Otherwise it prints setup instructions.
 """
 
 import argparse
